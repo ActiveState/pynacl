@@ -15,19 +15,22 @@ and run:
 Linux source build
 ------------------
 
-PyNaCl relies on `libsodium`_, a portable C library. A copy is bundled
-with PyNaCl so to install you can run:
+PyNaCl relies on `libsodium`_, a portable C library. This ActiveState
+build no longer bundles a copy; it always links against an externally built
+``libsodium`` (1.0.20 or later). By default the compiler and linker search
+paths are used:
 
 .. code-block:: console
 
     $ pip install pynacl
 
-If you'd prefer to use the version of ``libsodium`` provided by your
-distribution, you can disable the bundled copy during install by running:
+To build against a ``libsodium`` installed under a specific prefix, point
+``SODIUM_HOME`` at it (its ``include`` and ``lib``/``lib64`` directories are
+added to the search paths):
 
 .. code-block:: console
 
-    $ SODIUM_INSTALL=system pip install pynacl
+    $ SODIUM_HOME=/opt/libsodium pip install pynacl
 
 .. warning:: Usage of the legacy ``easy_install`` command provided by setuptools
    is generally discouraged, and is completely unsupported in PyNaCl's case.
