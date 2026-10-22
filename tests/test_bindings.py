@@ -495,6 +495,37 @@ def test_ed25519_is_valid_point():
     assert res is False
 
 
+# A point on the curve but outside the main subgroup: its L-multiple has
+# X == 0 but Y != Z. libsodium before the 2025-12-31 1.0.20-stable build
+# accepted it (CVE-2025-69277).
+NOT_MAIN_SUBGROUP_P = b'\x95' + 31 * b'\x99'
+
+
+@pytest.mark.skipif(not c.has_crypto_core_ed25519,
+                    reason="Requires full build of libsodium")
+def test_ed25519_is_valid_point_rejects_non_main_subgroup():
+    """
+    Verify crypto_core_ed25519_is_valid_point rejects a point outside
+    the main subgroup (CVE-2025-69277)
+    """
+    res = c.crypto_core_ed25519_is_valid_point(NOT_MAIN_SUBGROUP_P)
+    assert res is False
+
+
+@pytest.mark.skipif(not c.has_crypto_scalarmult_ed25519,
+                    reason="Requires full build of libsodium")
+def test_scalarmult_ed25519_rejects_non_main_subgroup():
+    """
+    Verify crypto_scalarmult_ed25519 and its noclamp variant refuse a
+    point outside the main subgroup (CVE-2025-69277)
+    """
+    n = c.crypto_scalarmult_ed25519_SCALARBYTES * b'\x01'
+    with pytest.raises(RuntimeError):
+        c.crypto_scalarmult_ed25519(n, NOT_MAIN_SUBGROUP_P)
+    with pytest.raises(RuntimeError):
+        c.crypto_scalarmult_ed25519_noclamp(n, NOT_MAIN_SUBGROUP_P)
+
+
 @pytest.mark.skipif(not c.has_crypto_core_ed25519,
                     reason="Requires full build of libsodium")
 def test_ed25519_add_and_sub():
