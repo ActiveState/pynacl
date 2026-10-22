@@ -65,15 +65,20 @@ class build_ext(_build_ext):
         # linked from the system default paths or from SODIUM_HOME.
         if "SODIUM_HOME" in os.environ:
             sodium_home = os.environ["SODIUM_HOME"]
+            lib_dirs = [os.path.join(sodium_home, "lib64"),
+                        os.path.join(sodium_home, "lib")]
             self.include_dirs.append(
                 os.path.join(sodium_home, "include"),
             )
-            self.library_dirs.insert(
-                0, os.path.join(sodium_home, "lib"),
-            )
-            self.library_dirs.insert(
-                0, os.path.join(sodium_home, "lib64"),
-            )
+            self.library_dirs[:0] = lib_dirs
+            # The extension links libsodium dynamically, so without a
+            # runtime search path it only imports when the loader happens
+            # to find the library. MSVC has no rpath; on Windows the DLL is
+            # found through PATH instead.
+            if platform.system() != "Windows":
+                self.rpath = (self.rpath or []) + [
+                    d for d in lib_dirs if os.path.isdir(d)
+                ]
 
         return _build_ext.run(self)
 

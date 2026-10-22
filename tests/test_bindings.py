@@ -526,6 +526,28 @@ def test_scalarmult_ed25519_rejects_non_main_subgroup():
         c.crypto_scalarmult_ed25519_noclamp(n, NOT_MAIN_SUBGROUP_P)
 
 
+def test_main_subgroup_check_refuses_vulnerable_libsodium():
+    """
+    Verify the check run at sodium_init refuses a libsodium whose point
+    validation accepts the non-main-subgroup point (CVE-2025-69277), and
+    passes one that rejects it
+    """
+    from nacl.bindings import sodium_core
+
+    seen = []
+
+    def accepts(p):
+        seen.append(p)
+        return 1
+
+    with pytest.raises(RuntimeError) as e:
+        sodium_core._check_main_subgroup_validation(accepts)
+    assert "CVE-2025-69277" in str(e.value)
+    assert seen == [NOT_MAIN_SUBGROUP_P]
+
+    sodium_core._check_main_subgroup_validation(lambda p: 0)
+
+
 @pytest.mark.skipif(not c.has_crypto_core_ed25519,
                     reason="Requires full build of libsodium")
 def test_ed25519_add_and_sub():

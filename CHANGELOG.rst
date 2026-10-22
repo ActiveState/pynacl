@@ -13,6 +13,14 @@ ActiveState security release on the Python 2.7-compatible 1.4.0 line.
 * Resolve ``CVE-2025-69277`` (``crypto_core_ed25519_is_valid_point`` accepted
   points outside the main subgroup) by building against the 1.0.20-stable
   ``libsodium`` of 2025-12-31 or later.
+* PyNaCl now refuses to load against a ``libsodium`` that still accepts points
+  outside the main subgroup, raising ``nacl.exceptions.RuntimeError`` at
+  import. The check is behavioural, since a vulnerable 1.0.20 and the fixed
+  1.0.20-stable report the same version. Minimal builds, which expose no
+  ed25519 core functions, skip it.
+* When ``SODIUM_HOME`` is set, the extension gets a runtime search path to its
+  ``lib``/``lib64`` directory on non-Windows platforms, so it imports without
+  ``LD_LIBRARY_PATH``.
 
 1.4.0 (2020-05-25)
 ------------------
